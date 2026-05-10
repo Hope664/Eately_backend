@@ -6,6 +6,8 @@ const morgan = require('morgan');
 const path = require('path');
 const { Server } = require('socket.io');
 const connectDB = require('./config/db');
+const errorHandler = require('./middleware/errorHandler');
+const notFound = require('./middleware/notFound');
 
 dotenv.config();
 
@@ -16,14 +18,12 @@ const app = express();
 // ── Middleware ──────────────────────────────────────────
 app.use(helmet());
 app.use(morgan('dev'));
-
 app.use(cors({
   origin: function (origin, callback) {
     const allowedOrigins = [
       process.env.RESTAURANT_CLIENT_URL,
       process.env.CUSTOMER_CLIENT_URL,
     ];
-    // Allow requests with no origin (Postman, Thunder Client, mobile apps)
     if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
@@ -35,7 +35,7 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// ── Static uploads folder ───────────────────────────────
+// ── Static uploads ──────────────────────────────────────
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // ── Health check ────────────────────────────────────────
@@ -45,23 +45,14 @@ app.get('/', (req, res) => {
 
 // ── Routes ──────────────────────────────────────────────
 app.use('/api/auth',        require('./routes/auth'));
-app.use('/api/restaurant', require('./models/restaurant'));
+app.use('/api/restaurants', require('./routes/restaurant'));
 app.use('/api/menu',        require('./routes/menu'));
 app.use('/api/bookings',    require('./routes/booking'));
-app.use('/api/orders',      require('./models/order'));
+app.use('/api/orders',      require('./routes/order'));
 
-// ── 404 handler ─────────────────────────────────────────
-app.use((req, res) => {
-  res.status(404).json({ message: 'Route not found' });
-});
-
-// ── Global error handler ────────────────────────────────
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(err.status || 500).json({
-    message: err.message || 'Internal server error',
-  });
-});
+// ── 404 + Error handlers ────────────────────────────────
+app.use(notFound);
+app.use(errorHandler);
 
 // ── Start server ────────────────────────────────────────
 const PORT = process.env.PORT || 5000;
@@ -89,6 +80,12 @@ io.on('connection', (socket) => {
     console.log(`Socket ${socket.id} joined restaurant: ${restaurantId}`);
   });
 
+  // Customer joins their personal room for order updates
+  socket.on('join_customer_room', (customerId) => {
+    socket.join(customerId);
+    console.log(`Socket ${socket.id} joined customer room: ${customerId}`);
+  });
+
   socket.on('leave_restaurant', (restaurantId) => {
     socket.leave(restaurantId);
   });
@@ -98,7 +95,6 @@ io.on('connection', (socket) => {
   });
 });
 
-// Make io accessible in controllers via req.app.get('io')
 app.set('io', io);
 
 module.exports = { app, io };
