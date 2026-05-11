@@ -9,7 +9,7 @@ const connectDB = require('./config/db');
 const errorHandler = require('./middleware/errorHandler');
 const notFound = require('./middleware/notFound');
 const swaggerUi = require('swagger-ui-express');
-const swaggerSpec = require('./config/swagger');
+const { swaggerSpec } = require('./config/swagger');
 
 dotenv.config();
 
@@ -45,6 +45,7 @@ app.get('/', (req, res) => {
   res.json({ message: '🍽️ Eataly API is running' });
 });
 
+app.use('/api-docs', swaggerUi.serve,swaggerUi.setup(swaggerSpec));
 // ── Routes ──────────────────────────────────────────────
 app.use('/api/auth',        require('./routes/auth'));
 app.use('/api/restaurants', require('./routes/restaurant'));
