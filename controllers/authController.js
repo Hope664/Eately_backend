@@ -20,16 +20,27 @@ exports.register = async (req, res) => {
   try {
     const { name, email, password, role, phone } = req.body;
 
+    console.log('📝 Register attempt:', { name, email, role })
+
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(400).json({ message: 'Email already in use' });
     }
 
+    console.log('✅ No existing user found, creating...')
+
     const user = await User.create({ name, email, password, role, phone });
+
+    console.log('✅ User created:', user._id)
+
     const { accessToken, refreshToken } = generateTokens(user._id);
+
+    console.log('✅ Tokens generated')
 
     user.refreshToken = refreshToken;
     await user.save({ validateBeforeSave: false });
+
+    console.log('✅ Refresh token saved')
 
     res.status(201).json({
       message: 'Account created successfully',
@@ -45,6 +56,8 @@ exports.register = async (req, res) => {
       },
     });
   } catch (error) {
+    console.log('❌ REGISTER ERROR MESSAGE:', error.message)
+    console.log('❌ REGISTER ERROR STACK:', error.stack)
     res.status(500).json({ message: error.message });
   }
 };
@@ -53,6 +66,8 @@ exports.register = async (req, res) => {
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
+
+    console.log('📝 Login attempt:', { email })
 
     if (!email || !password) {
       return res.status(400).json({ message: 'Email and password are required' });
@@ -72,6 +87,8 @@ exports.login = async (req, res) => {
     user.refreshToken = refreshToken;
     await user.save({ validateBeforeSave: false });
 
+    console.log('✅ Login successful:', user._id)
+
     res.status(200).json({
       message: 'Login successful',
       accessToken,
@@ -86,6 +103,8 @@ exports.login = async (req, res) => {
       },
     });
   } catch (error) {
+    console.log('❌ LOGIN ERROR:', error.message)
+    console.log('❌ LOGIN STACK:', error.stack)
     res.status(500).json({ message: error.message });
   }
 };
