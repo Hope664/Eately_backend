@@ -22,11 +22,7 @@ app.use(helmet());
 app.use(morgan('dev'));
 app.use(cors({
   origin: function (origin, callback) {
-    const allowedOrigins = [
-      process.env.RESTAURANT_CLIENT_URL,
-      process.env.CUSTOMER_CLIENT_URL,
-    ];
-    if (!origin || allowedOrigins.includes(origin)) {
+    if (!origin || /^http:\/\/localhost:\d+$/.test(origin) || /^http:\/\/127\.0\.0\.1:\d+$/.test(origin)) {
       callback(null, true);
     } else {
       callback(new Error('Not allowed by CORS'));
@@ -66,10 +62,7 @@ const server = app.listen(PORT, () => {
 // ── Socket.io ───────────────────────────────────────────
 const io = new Server(server, {
   cors: {
-    origin: [
-      process.env.RESTAURANT_CLIENT_URL,
-      process.env.CUSTOMER_CLIENT_URL,
-    ],
+    origin: /^http:\/\/localhost:\d+$|^http:\/\/127\.0\.0\.1:\d+$/,
     methods: ['GET', 'POST'],
   },
 });
