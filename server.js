@@ -1,8 +1,9 @@
 const express = require('express');
-const dotenv = require('dotenv');
 const cors = require('cors');
-const helmet = require('helmet');
 const morgan = require('morgan');
+const helmet = require('helmet');
+const cookieParser = require('cookie-parser');
+const dotenv = require('dotenv');
 const path = require('path');
 const { Server } = require('socket.io');
 const connectDB = require('./config/db');
@@ -11,7 +12,7 @@ const notFound = require('./middleware/notFound');
 const swaggerUi = require('swagger-ui-express');
 const { swaggerSpec } = require('./config/swagger');
 
-dotenv.config();
+dotenv.config(); // remove the extra parenthesis
 
 connectDB();
 

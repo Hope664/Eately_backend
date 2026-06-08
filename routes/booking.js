@@ -60,7 +60,7 @@ router.get('/availability/:restaurantId', checkAvailability);
  *       200:
  *         description: List of bookings
  */
-router.get('/my-bookings', protect, restrictTo('customer'), getMyBookings);
+router.get('/my-bookings', protect, getMyBookings);
 
 /**
  * @swagger
@@ -112,7 +112,7 @@ router.get('/my-bookings', protect, restrictTo('customer'), getMyBookings);
  *       400:
  *         description: Table already booked
  */
-router.post('/:restaurantId', protect, restrictTo('customer'), createBooking);
+router.post('/:restaurantId', protect, createBooking);
 
 /**
  * @swagger
